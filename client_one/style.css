@@ -1,0 +1,114 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: lightblue;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  margin: auto auto;
+  width: 450px;
+  min-height: 500px;
+  height: 70vh;
+  background-color: white;
+  border: 1px solid rgb(80, 80, 80);
+}
+
+.chat-container header {
+  height: 35px;
+  display: flex;
+  color: white;
+  background-color: rgb(80, 80, 80);
+  padding: 10px;
+}
+
+.chat-container header span {
+  line-height: 35px;
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.chat-container select {
+  height: 35px;
+  flex-grow: 1;
+  border: 1px solid white;
+  border-radius: 4px;
+  padding: 0 5px;
+  outline: none;
+  background-color: transparent;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.chat-container select option {
+  color: black;
+}
+
+.chat-container ul {
+  flex-grow: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: scroll;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+/*Chrome,
+    Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+.chat-container ul li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  font-size: 16px;
+  width: 100%;
+}
+.chat-container ul li:first-child {
+  padding: 10px 10px 5px 10px;
+  box-sizing: border-box;
+  font-size: 16px;
+  width: 100%;
+}
+
+.chat-container ul li.guest-msg {
+  background-color: rgba(0, 0, 0, 0.22);
+}
+
+.chat-container ul li .time {
+  color: rgb(80, 80, 80);
+}
+
+.chat-container form {
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.chat-container form input {
+  flex-grow: 1;
+  outline: none;
+  font-size: 18px;
+  padding: 0 5px;
+}
+
+.chat-container form button {
+  width: 70px;
+  background-color: rgb(80, 80, 80);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  outline: none;
+  margin-left: 10px;
+  cursor: pointer;
+}
