@@ -1,16 +1,18 @@
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
+const bodyParser = require("body-parser");
 const app = express();
 app.use(cors());
-const bodyParser = require("body-parser");
 app.use(bodyParser.text({ type: "text/plain" }));
+const server = http.createServer(app);
 const port = 8000;
-
+const WebSocket = require("ws");
+const wss = new WebSocket.Server({ server });
 let last_client_one_msg = null;
 let last_client_two_msg = null;
 let new_message_from_client_one = false;
 let new_message_from_client_two = false;
-
 let connections = { one: false, two: false };
 
 app.get("/polling/:id", async (req, res) => {
@@ -85,6 +87,36 @@ app.post("/:id", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+wss.on("connection", (ws) => {
+  ws.on("message", async (data) => {
+    wss.clients.forEach((client) => {
+      const data_json = JSON.parse(data);
+      if (data_json.sender === 1) {
+        if (connections.two) {
+          const response = connections.two;
+          connections.two = false;
+          response.send(msg);
+        } else {
+          new_message_from_client_one = true;
+          last_client_one_msg = data_json.message;
+          ws.send();
+        }
+      } else if (data_json.sender === 2) {
+        if (connections.one) {
+          const response = connections.one;
+          connections.one = false;
+          response.send(msg);
+        } else {
+          new_message_from_client_two = true;
+          last_client_two_msg = data_json.message;
+          ws.send();
+        }
+      }
+    });
+  });
+  ws.send("hello");
+});
+
+server.listen(port, () => {
   console.log(`Server listening on port ${port}!`);
 });

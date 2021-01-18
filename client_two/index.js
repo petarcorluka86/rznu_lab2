@@ -2,6 +2,7 @@ const messages = document.getElementById("messages");
 const messageInput = document.getElementById("message-input");
 const form = document.getElementById("form");
 const communicationSelect = document.getElementById("communication-select");
+let ws;
 
 const getCurrentTime = () => {
   const date = new Date();
@@ -80,9 +81,6 @@ const recieveLongPolling = () => {
   xhr.send();
 };
 
-const sendWebSocket = () => {};
-const recieveWebSocket = () => {};
-
 const onSend = (event) => {
   event.preventDefault();
   if (messageInput.value === "") return;
@@ -90,7 +88,7 @@ const onSend = (event) => {
     toSend = messageInput.value;
     switch (communicationSelect.value) {
       case "WEB SOCKET":
-        sendWebSocket();
+        ws.send(JSON.stringify({ sender: 2, message: toSend }));
         break;
       default:
         send();
@@ -99,17 +97,32 @@ const onSend = (event) => {
   }
 };
 
-const pollingInterval = setInterval(recievePolling, 500);
+var pollingInterval = setInterval(recievePolling, 500);
 
 const communicationChange = () => {
   if (communicationSelect.value === "POLLING") {
-    clearInterval(pollingInterval);
-    setInterval(recievePolling, 500);
+    if (ws) ws.close();
+    pollingInterval = setInterval(recievePolling, 500);
   } else if (communicationSelect.value === "LONG POLLING") {
     clearInterval(pollingInterval);
+    if (ws) ws.close();
     recieveLongPolling();
   } else {
     clearInterval(pollingInterval);
+    ws = new WebSocket("ws://localhost:8000");
+    ws.onopen = () => {
+      console.log("Websocket connection opened!");
+    };
+    ws.onerror = (e) => {
+      console.log(e);
+    };
+    ws.onmessage = (msg) => {
+      console.log(msg.data);
+    };
+    ws.onclose = () => {
+      console.log("Websocket connection closed!");
+      ws = null;
+    };
   }
 };
 
