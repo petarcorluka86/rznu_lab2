@@ -14,6 +14,7 @@ let last_client_two_msg = null;
 let new_message_from_client_one = false;
 let new_message_from_client_two = false;
 let connections = { one: false, two: false };
+let websocket = { 1: null, 2: null };
 
 app.get("/polling/:id", async (req, res) => {
   try {
@@ -62,7 +63,9 @@ app.post("/:id", async (req, res) => {
     const id = req.params.id;
     const msg = req.body;
     if (id === "1") {
-      if (connections.two) {
+      if (websocket[2]) {
+        websocket[2].send(msg);
+      } else if (connections.two) {
         const response = connections.two;
         connections.two = false;
         response.send(msg);
@@ -72,7 +75,9 @@ app.post("/:id", async (req, res) => {
         res.send();
       }
     } else if (id === "2") {
-      if (connections.one) {
+      if (websocket[1]) {
+        websocket[1].send(msg);
+      } else if (connections.one) {
         const response = connections.one;
         connections.one = false;
         response.send(msg);
@@ -88,33 +93,35 @@ app.post("/:id", async (req, res) => {
 });
 
 wss.on("connection", (ws) => {
-  ws.on("message", async (data) => {
-    wss.clients.forEach((client) => {
+  wss.clients.forEach((client) => {
+    client.on("message", async (data) => {
       const data_json = JSON.parse(data);
-      if (data_json.sender === 1) {
+      if (data_json.openMessage) {
+        client.id = data_json.sender;
+        websocket[data_json.sender] = client;
+      } else if (data_json.closeMessage) {
+        websocket[data_json.sender] = null;
+      } else if (data_json.sender === 1) {
         if (connections.two) {
           const response = connections.two;
           connections.two = false;
-          response.send(msg);
+          response.send(data_json.message);
         } else {
-          new_message_from_client_one = true;
           last_client_one_msg = data_json.message;
-          ws.send();
+          new_message_from_client_one = true;
         }
       } else if (data_json.sender === 2) {
         if (connections.one) {
           const response = connections.one;
           connections.one = false;
-          response.send(msg);
+          response.send(data_json.message);
         } else {
-          new_message_from_client_two = true;
           last_client_two_msg = data_json.message;
-          ws.send();
+          new_message_from_client_two = true;
         }
       }
     });
   });
-  ws.send("hello");
 });
 
 server.listen(port, () => {
