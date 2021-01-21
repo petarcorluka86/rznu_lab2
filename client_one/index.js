@@ -2,6 +2,7 @@ const messages = document.getElementById("messages");
 const messageInput = document.getElementById("message-input");
 const form = document.getElementById("form");
 const communicationSelect = document.getElementById("communication-select");
+let cancelLongPolling = true;
 let ws;
 
 const getCurrentTime = () => {
@@ -57,7 +58,8 @@ const send = () => {
   xhr.open("POST", "http://localhost:8000/1");
   xhr.setRequestHeader("Content-Type", "text/plain");
   xhr.send(toSend);
-  xhr.onload = function () {};
+  xhr.onload = function (msg) {};
+  xhr.onerror = (error) => {};
 };
 
 const recievePolling = () => {
@@ -76,7 +78,7 @@ const recieveLongPolling = () => {
   xhr.onload = function () {
     console.log(`I fetch "${this.response}" via LONG POLLING.`);
     if (this.response) addRecievedToChatbox(this.response);
-    recieveLongPolling();
+    if (!cancelLongPolling) recieveLongPolling();
   };
   xhr.send();
 };
@@ -102,25 +104,30 @@ var pollingInterval = setInterval(recievePolling, 500);
 const communicationChange = () => {
   if (communicationSelect.value === "POLLING") {
     if (ws) ws.close();
+    cancelLongPolling = true;
     pollingInterval = setInterval(recievePolling, 500);
   } else if (communicationSelect.value === "LONG POLLING") {
+    cancelLongPolling = false;
     clearInterval(pollingInterval);
     if (ws) ws.close();
     recieveLongPolling();
   } else {
     clearInterval(pollingInterval);
+    cancelLongPolling = true;
     ws = new WebSocket("ws://localhost:8000");
     ws.onopen = () => {
       console.log("Websocket connection opened!");
+      ws.send(JSON.stringify({ openMessage: true, sender: 1, message: "Hello server!" }));
     };
     ws.onerror = (e) => {
       console.log(e);
     };
     ws.onmessage = (msg) => {
-      console.log(msg.data);
+      addRecievedToChatbox(msg.data);
     };
     ws.onclose = () => {
       console.log("Websocket connection closed!");
+      ws.send(JSON.stringify({ closeMessage: true, sender: 1, message: "Bye server!" }));
       ws = null;
     };
   }
